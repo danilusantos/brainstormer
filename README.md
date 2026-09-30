@@ -95,3 +95,16 @@ npm run dev      # sobe o servidor (watch) + Vite dev server
 npm run build    # gera o dist/
 npm run start    # sobe só o servidor, servindo o dist/ em localhost:3001
 ```
+
+## Publicar uma nova versão
+
+O build e a release são automáticos via GitHub Actions. Para lançar:
+
+```bash
+git tag 1.0.1v      # use o padrão X.Y.Zv
+git push origin 1.0.1v
+```
+
+Ao receber a tag, o CI compila o projeto, empacota um `.zip` pronto para o
+cliente (com o build atualizado) e cria a release no GitHub com esse arquivo
+anexado. Não é preciso buildar nem commitar o `dist/` manualmente.
