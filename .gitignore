@@ -33,3 +33,8 @@ dist-ssr
 assets/files/**
 !assets/files/
 !assets/files/.gitkeep
+
+# Quadros salvos (auto-save) - dado de usuario, nao versionar
+assets/board/**
+!assets/board/
+!assets/board/.gitkeep
