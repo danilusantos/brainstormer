@@ -12,11 +12,21 @@ import { execSync } from 'child_process'
 import { existsSync, cpSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { platform } from 'os'
+
+// O patch do rollup (fallback WASM) só é necessário no WINDOWS, onde o
+// Smart App Control / AppControl pode bloquear o binário nativo (.node).
+// Em Linux/macOS (ex: no CI do GitHub Actions) o rollup nativo funciona
+// normalmente — aplicar o patch lá quebra o build. Por isso, saímos cedo.
+if (platform() !== 'win32') {
+  console.log('ℹ️  postinstall: patch do rollup ignorado (não é Windows).')
+  process.exit(0)
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = join(__dirname, '..')
 
-// 1. Aplicar patch-package patches
+// 1. Aplicar patch-package patches (substitui o native.js do rollup)
 try {
   execSync('npx patch-package', { cwd: root, stdio: 'inherit' })
 } catch {
