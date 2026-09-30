@@ -15,7 +15,19 @@ REM [1/3] Verificar Node.js e npm
 echo.
 echo  [1/3] Verificando Node.js...
 powershell.exe -ExecutionPolicy Bypass -File "%~dp0app\scripts\verificar-node.ps1"
-if errorlevel 1 (
+set "NODE_CHECK=%errorlevel%"
+
+REM Codigo 10 = Node acabou de ser instalado. Reinicia numa nova janela
+REM para que o PATH atualizado seja reconhecido (npm passa a funcionar).
+if "%NODE_CHECK%"=="10" (
+    echo.
+    echo  Node.js instalado! Reiniciando para aplicar as mudancas...
+    timeout /t 2 /nobreak >nul
+    start "" "%~f0"
+    exit /b 0
+)
+
+if not "%NODE_CHECK%"=="0" (
     echo.
     echo  ERRO: Node.js nao foi instalado corretamente.
     echo  Verifique sua conexao com a internet e execute este arquivo novamente.

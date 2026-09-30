@@ -8,12 +8,12 @@ $Root = Split-Path -Parent $PSScriptRoot
 Write-Host ""
 Write-Host "  Iniciando Brainstormer..."
 
-# Garantir node/npm no PATH
+# Recarregar PATH da maquina (caso o Node tenha sido instalado agora)
+$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" +
+            [System.Environment]::GetEnvironmentVariable("PATH", "User")
 $nodeDir = "C:\Program Files\nodejs"
-if (Test-Path "$nodeDir\node.exe") {
-    if ($env:PATH -notlike "*$nodeDir*") {
-        $env:PATH = "$nodeDir;" + $env:PATH
-    }
+if ((Test-Path "$nodeDir\node.exe") -and ($env:PATH -notlike "*$nodeDir*")) {
+    $env:PATH = "$nodeDir;" + $env:PATH
 }
 
 # ── Encerrar instancia anterior na porta 3001 ─────────────────
