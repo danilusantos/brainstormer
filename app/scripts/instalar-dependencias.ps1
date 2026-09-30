@@ -8,12 +8,21 @@ $Root = Split-Path -Parent $PSScriptRoot
 Write-Host ""
 Write-Host "  Verificando dependencias do projeto..."
 
-# Garantir node no PATH
+# ── Recarregar o PATH da maquina ──────────────────────────────
+# Se o Node foi instalado agora (nesta mesma janela), o PATH da sessao
+# ainda nao o conhece. Recarregamos das variaveis de ambiente do sistema.
+$env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";" +
+            [System.Environment]::GetEnvironmentVariable("PATH", "User")
+
+# Localizar o npm (no Windows e um .cmd, nao um .exe)
 $nodeDir = "C:\Program Files\nodejs"
-if (Test-Path "$nodeDir\node.exe") {
-    if ($env:PATH -notlike "*$nodeDir*") {
-        $env:PATH = "$nodeDir;" + $env:PATH
-    }
+$npmCmd = Join-Path $nodeDir "npm.cmd"
+if (-not (Test-Path $npmCmd)) {
+    $found = Get-Command npm -ErrorAction SilentlyContinue
+    if ($found) { $npmCmd = $found.Source }
+}
+if ((Test-Path "$nodeDir\node.exe") -and ($env:PATH -notlike "*$nodeDir*")) {
+    $env:PATH = "$nodeDir;" + $env:PATH
 }
 
 # ── Verificar se node_modules existe ─────────────────────────
@@ -27,15 +36,14 @@ if ($tldrawOk) {
     Write-Host "  (pode demorar alguns minutos na primeira vez)"
     Write-Host ""
 
-    Set-Location $Root
-    $result = Start-Process "npm" `
-        -ArgumentList "install" `
-        -WorkingDirectory $Root `
-        -Wait `
-        -PassThru `
-        -NoNewWindow
+    # Invoca 'npm install' via cmd /c (lida corretamente com o npm.cmd).
+    # Roda de forma sincrona e no diretorio do projeto.
+    Push-Location $Root
+    & cmd.exe /c "`"$npmCmd`" install"
+    $npmExit = $LASTEXITCODE
+    Pop-Location
 
-    if ($result.ExitCode -ne 0) {
+    if ($npmExit -ne 0) {
         Write-Host ""
         Write-Host "  ERRO ao instalar dependencias (npm install falhou)." -ForegroundColor Red
         Write-Host "  Verifique sua conexao com a internet e tente novamente." -ForegroundColor Yellow
@@ -73,6 +81,21 @@ $filesDir = Join-Path $Root "assets\files"
 if (-not (Test-Path $filesDir)) {
     New-Item -ItemType Directory -Path $filesDir -Force | Out-Null
     Write-Host "  Pasta assets\files\ criada!" -ForegroundColor Green
+}
+
+# ── Criar atalho "files" na raiz apontando para app\assets\files ──
+# A raiz e o pai de app\ (onde este projeto vive).
+$ProjectRoot = Split-Path -Parent $Root
+$linkPath = Join-Path $ProjectRoot "files"
+if (-not (Test-Path $linkPath)) {
+    # Junction nao precisa de admin (diferente de symlink no Windows)
+    cmd /c mklink /J "`"$linkPath`"" "`"$filesDir`"" | Out-Null
+    if (Test-Path $linkPath) {
+        Write-Host "  Atalho 'files' criado na raiz!" -ForegroundColor Green
+    } else {
+        Write-Host "  Aviso: nao foi possivel criar o atalho 'files'." -ForegroundColor Yellow
+        Write-Host "  Voce ainda pode usar a pasta app\assets\files diretamente." -ForegroundColor Yellow
+    }
 }
 
 Write-Host "  Tudo pronto!" -ForegroundColor Green

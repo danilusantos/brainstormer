@@ -44,10 +44,10 @@ if ($nodeExe) {
 Write-Host "  Node.js nao encontrado. Iniciando instalacao..." -ForegroundColor Yellow
 Write-Host ""
 
-$installerScript = Join-Path $Root "instalar-node.ps1"
+$installerScript = Join-Path $PSScriptRoot "instalar-node.ps1"
 
 if (-not (Test-Path $installerScript)) {
-    Write-Host "  ERRO: instalar-node.ps1 nao encontrado em $Root" -ForegroundColor Red
+    Write-Host "  ERRO: instalar-node.ps1 nao encontrado em $PSScriptRoot" -ForegroundColor Red
     exit 1
 }
 
@@ -63,14 +63,22 @@ $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH", "Machine") + ";
 
 # Verificar novamente
 $nodeCheck = Get-Command node -ErrorAction SilentlyContinue
+if (-not $nodeCheck) {
+    # Fallback: procurar direto na pasta padrao
+    if (Test-Path "C:\Program Files\nodejs\node.exe") {
+        $nodeCheck = $true
+    }
+}
+
 if ($nodeCheck) {
-    $nodeVer = & node --version 2>$null
     Write-Host ""
-    Write-Host "  Node.js $nodeVer instalado com sucesso!" -ForegroundColor Green
-    exit 0
+    Write-Host "  Node.js instalado com sucesso!" -ForegroundColor Green
+    # Codigo 10 = "instalei agora"; o iniciar.bat vai reiniciar numa nova
+    # janela para herdar o PATH atualizado (npm passa a ser reconhecido).
+    exit 10
 } else {
     Write-Host ""
     Write-Host "  ERRO: Node.js nao foi detectado apos instalacao." -ForegroundColor Red
-    Write-Host "  Feche esta janela, abra um novo terminal e execute iniciar.bat novamente." -ForegroundColor Yellow
+    Write-Host "  Feche esta janela, abra novamente e execute o iniciar.bat." -ForegroundColor Yellow
     exit 1
 }

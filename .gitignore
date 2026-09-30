@@ -9,9 +9,11 @@ lerna-debug.log*
 server.log
 
 node_modules
-dist
 dist-ssr
 *.local
+
+# dist/ NAO e ignorado: o build de producao e versionado para que o
+# cliente rode direto sem precisar compilar (basta clicar no iniciar.bat).
 
 # Editor directories and files
 .vscode/*
@@ -24,17 +26,20 @@ dist-ssr
 *.sln
 *.sw?
 
-# Junction/symlink na raiz (aponta para assets/files)
+# Junction/symlink na raiz (aponta para app/assets/files)
 /files
 
+# Atalho gerado localmente pelo iniciar.bat (caminhos absolutos da maquina)
+/Brainstormer.lnk
+
 # Arquivos dos usuarios/devs - NAO versionar dados, apenas codigo.
-# Ignora todo o conteudo de assets/files/ (imagens, PDFs, subpastas)
+# Ignora todo o conteudo de app/assets/files/ (imagens, PDFs, subpastas)
 # mas mantem a pasta no repositorio via .gitkeep
-assets/files/**
-!assets/files/
-!assets/files/.gitkeep
+app/assets/files/**
+!app/assets/files/
+!app/assets/files/.gitkeep
 
 # Quadros salvos (auto-save) - dado de usuario, nao versionar
-assets/board/**
-!assets/board/
-!assets/board/.gitkeep
+app/assets/board/**
+!app/assets/board/
+!app/assets/board/.gitkeep
