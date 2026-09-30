@@ -4,11 +4,12 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run server:dev\" \"vite\"",
+    "server:dev": "tsx watch server/index.ts",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "server": "tsx watch server/index.ts",
-    "start": "concurrently \"npm run server\" \"npm run dev\"",
+    "server": "tsx server/index.ts",
+    "start": "tsx server/index.ts",
     "postinstall": "node scripts/postinstall.js"
   },
   "dependencies": {

@@ -6,9 +6,9 @@ echo  =========================================
 echo     Brainstormer - Iniciando
 echo  =========================================
 
-REM [1/4] Verificar Node.js e npm
+REM [1/3] Verificar Node.js e npm
 echo.
-echo  [1/4] Verificando Node.js...
+echo  [1/3] Verificando Node.js...
 powershell.exe -ExecutionPolicy Bypass -File "%~dp0scripts\verificar-node.ps1"
 if errorlevel 1 (
     echo.
@@ -19,9 +19,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM [2/4] Instalar dependencias
+REM [2/3] Instalar dependencias (apenas na primeira vez)
 echo.
-echo  [2/4] Verificando dependencias...
+echo  [2/3] Verificando dependencias...
 powershell.exe -ExecutionPolicy Bypass -File "%~dp0scripts\instalar-dependencias.ps1"
 if errorlevel 1 (
     echo.
@@ -32,29 +32,17 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM [3/4] Iniciar servidor Express
+REM [3/3] Iniciar o servidor e abrir o navegador
 echo.
-echo  [3/4] Iniciando servidor...
+echo  [3/3] Iniciando o servidor...
 powershell.exe -ExecutionPolicy Bypass -File "%~dp0scripts\iniciar-servidor.ps1"
-if errorlevel 1 (
-    echo.
-    echo  ERRO ao iniciar servidor. Verifique server.log.
-    echo.
-    pause
-    exit /b 1
-)
-
-REM [4/4] Iniciar frontend e abrir browser
-echo.
-echo  [4/4] Iniciando interface visual...
-powershell.exe -ExecutionPolicy Bypass -File "%~dp0scripts\iniciar-frontend.ps1"
 
 echo.
 echo  =========================================
 echo    Brainstormer esta rodando!
 echo.
-echo    Acesse:   http://localhost:5173
-echo    Arquivos: coloque na pasta files
+echo    Acesse:   http://localhost:3001
+echo    Arquivos: pasta files
 echo.
 echo    Mantenha esta janela aberta.
 echo    Pressione qualquer tecla para encerrar.
@@ -62,10 +50,10 @@ echo  =========================================
 echo.
 pause >nul
 
-REM Encerrar tudo
+REM Encerrar o servidor ao fechar
 echo.
 echo  Encerrando Brainstormer...
-powershell.exe -ExecutionPolicy Bypass -Command "Get-NetTCPConnection -LocalPort 3001,5173 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"
+powershell.exe -ExecutionPolicy Bypass -Command "Get-NetTCPConnection -LocalPort 3001 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"
 echo  Encerrado. Ate logo!
 timeout /t 2 /nobreak >nul
 exit /b 0

@@ -4,6 +4,9 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // NOTA: este server/proxy vale apenas para o modo de DESENVOLVIMENTO (npm run dev).
+  // Em produção quem serve o app é o Express (dist/), tudo na mesma origem (porta 3001),
+  // portanto não há proxy nem CORS envolvidos.
   server: {
     port: 5173,
     proxy: {

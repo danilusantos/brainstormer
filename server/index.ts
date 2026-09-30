@@ -11,6 +11,9 @@ const __dirname = path.dirname(__filename)
 const app = express()
 const PORT = 3001
 
+// Pasta do build de produção (front já compilado)
+const DIST_DIR = path.resolve(__dirname, '../dist')
+
 // Pasta de arquivos
 const FILES_DIR = path.resolve(__dirname, '../assets/files')
 
@@ -336,13 +339,31 @@ watcher
     broadcastSSE('change', entry)
   })
 
+// ── Front-end estático (build de produção) ─────────────────────
+// Servido DEPOIS das rotas de API/arquivos para não interceptá-las.
+// O cliente acessa o app inteiro em http://localhost:3001
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR))
+
+  // Fallback SPA: qualquer rota que não seja /api ou /files devolve o index.html
+  app.get(/^(?!\/(api|files)\/).*/, (_req, res) => {
+    res.sendFile(path.join(DIST_DIR, 'index.html'))
+  })
+} else {
+  console.warn('⚠️  Pasta dist/ não encontrada. Rode "npm run build" para gerar o front.')
+}
+
 // Iniciar servidor
 app.listen(PORT, () => {
   const initialCount = scanFilesRecursive(FILES_DIR).length
+  const hasBuild = fs.existsSync(DIST_DIR)
   console.log('')
-  console.log('🚀 Brainstormer Server rodando!')
-  console.log(`   Porta:    http://localhost:${PORT}`)
+  console.log('🚀 Brainstormer rodando!')
+  console.log(`   Acesse:   http://localhost:${PORT}`)
   console.log(`   Arquivos: ${FILES_DIR}`)
   console.log(`   Encontrados: ${initialCount} arquivo(s) (incluindo subpastas)`)
+  if (!hasBuild) {
+    console.log('   ⚠️  Front não compilado — rode "npm run build"')
+  }
   console.log('')
 })
