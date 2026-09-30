@@ -1,6 +1,11 @@
 @echo off
 title Brainstormer
 
+REM Criar/atualizar o atalho com icone (caminhos corretos desta maquina)
+if not exist "%~dp0Brainstormer.lnk" (
+    powershell.exe -ExecutionPolicy Bypass -File "%~dp0app\scripts\criar-atalho.ps1" >nul 2>&1
+)
+
 echo.
 echo  =========================================
 echo     Brainstormer - Iniciando
@@ -9,7 +14,7 @@ echo  =========================================
 REM [1/3] Verificar Node.js e npm
 echo.
 echo  [1/3] Verificando Node.js...
-powershell.exe -ExecutionPolicy Bypass -File "%~dp0scripts\verificar-node.ps1"
+powershell.exe -ExecutionPolicy Bypass -File "%~dp0app\scripts\verificar-node.ps1"
 if errorlevel 1 (
     echo.
     echo  ERRO: Node.js nao foi instalado corretamente.
@@ -23,7 +28,7 @@ if errorlevel 1 (
 REM [2/3] Instalar dependencias (apenas na primeira vez)
 echo.
 echo  [2/3] Verificando dependencias...
-powershell.exe -ExecutionPolicy Bypass -File "%~dp0scripts\instalar-dependencias.ps1"
+powershell.exe -ExecutionPolicy Bypass -File "%~dp0app\scripts\instalar-dependencias.ps1"
 if errorlevel 1 (
     echo.
     echo  ERRO ao instalar dependencias.
@@ -36,7 +41,7 @@ if errorlevel 1 (
 REM [3/3] Iniciar o servidor e abrir o navegador
 echo.
 echo  [3/3] Iniciando o servidor...
-powershell.exe -ExecutionPolicy Bypass -File "%~dp0scripts\iniciar-servidor.ps1"
+powershell.exe -ExecutionPolicy Bypass -File "%~dp0app\scripts\iniciar-servidor.ps1"
 
 echo.
 echo  =========================================

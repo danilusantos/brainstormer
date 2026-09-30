@@ -4,8 +4,8 @@ Quadro visual interativo para organizar ideias com imagens e PDFs.
 
 ## Como usar
 
-### Iniciar o app
-Dê duplo clique em **`iniciar.bat`**.
+### 1. Iniciar o app
+Dê duplo clique em **`Brainstormer`** (o atalho) ou em **`iniciar.bat`**.
 
 Ele faz tudo sozinho:
 - Verifica o Node.js e **instala automaticamente** se não encontrar
@@ -17,7 +17,7 @@ Não precisa clicar em mais nada. Para encerrar, feche a janela do `iniciar.bat`
 > A instalação do Node.js pede permissão de administrador (janela do Windows).
 > É só confirmar.
 
-### 3. Adicionar arquivos ao quadro
+### 2. Adicionar arquivos ao quadro
 Três formas, todas salvam o arquivo na pasta **`files/`** automaticamente:
 - **Colar** com `Ctrl+V` (ex: um print ou imagem copiada do navegador)
 - **Arrastar** de outra pasta direto para o quadro
@@ -27,7 +27,7 @@ Formatos suportados:
 - **Imagens:** PNG, JPG, JPEG, GIF, WEBP
 - **PDFs:** abrem com navegação de páginas
 
-### 4. Usar o quadro
+### 3. Usar o quadro
 
 | Ação | Como fazer |
 |------|-----------|
@@ -48,7 +48,7 @@ O quadro é **salvo automaticamente** e restaurado quando você reabre o app.
 ## Arquitetura
 
 Um **único servidor** (Node.js + Express) roda localmente na porta `3001`:
-- Serve a interface já compilada (pasta `dist/`, versionada no repositório)
+- Serve a interface já compilada (pasta `app/dist/`, versionada no repositório)
 - Expõe a API que lê, serve e salva os arquivos da pasta `files/`
 - Observa a pasta `files/` e atualiza a barra lateral em tempo real
 
@@ -57,40 +57,41 @@ no disco local. Por isso o cliente só precisa baixar o repositório e clicar.
 
 > O `dist/` (build de produção) é versionado de propósito, para o cliente não
 > precisar compilar nada. Se você alterar o código-fonte, rode `npm run build`
-> e faça commit do `dist/` atualizado.
+> em `app/` e faça commit do `dist/` atualizado.
 
 ## Estrutura do projeto
 
+A raiz fica enxuta para o cliente. Todo o código vive dentro de `app/`.
+
 ```
 brainstormer/
-├── files/              ← Seus arquivos (link para assets/files/)
-├── assets/
-│   ├── files/          ← Pasta real dos arquivos
-│   └── board/          ← Quadro salvo automaticamente (não versionado)
-├── dist/               ← Build de produção (versionado)
-├── src/                ← Código-fonte do front (React + TypeScript)
-├── server/             ← Servidor Node.js (Express)
-├── scripts/            ← Scripts .ps1 usados pelo iniciar.bat
-│   ├── verificar-node.ps1
-│   ├── instalar-node.ps1
-│   ├── instalar-dependencias.ps1
-│   └── iniciar-servidor.ps1
+├── Brainstormer.lnk    ← Atalho com ícone (aponta para iniciar.bat)
 ├── iniciar.bat         ← Inicia o app (1 clique)
-└── README.md
+├── files/              ← Seus arquivos (link para app/assets/files/)
+├── README.md
+└── app/                ← Projeto (código, servidor, build)
+    ├── assets/
+    │   ├── files/      ← Pasta real dos arquivos
+    │   └── board/      ← Quadro salvo automaticamente (não versionado)
+    ├── dist/           ← Build de produção (versionado)
+    ├── src/            ← Código-fonte do front (React + TypeScript)
+    ├── server/         ← Servidor Node.js (Express)
+    └── scripts/        ← Scripts .ps1 usados pelo iniciar.bat
+        ├── verificar-node.ps1
+        ├── instalar-node.ps1
+        ├── instalar-dependencias.ps1
+        └── iniciar-servidor.ps1
 ```
 
 ## Desenvolvimento
 
-Para trabalhar no código com hot-reload:
+Todos os comandos rodam dentro de `app/`:
 
 ```bash
+cd app
 npm install
 npm run dev      # sobe o servidor (watch) + Vite dev server
-```
 
-Para gerar o build e testar em modo produção (1 servidor):
-
-```bash
 npm run build    # gera o dist/
 npm run start    # sobe só o servidor, servindo o dist/ em localhost:3001
 ```
