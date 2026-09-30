@@ -126,7 +126,8 @@ app.use(cors({
   },
   credentials: true,
 }))
-app.use(express.json())
+// Limite alto para aceitar imagens coladas em base64 (Ctrl+V)
+app.use(express.json({ limit: '50mb' }))
 
 // ── GET /api/files ── Lista recursiva de todos os arquivos suportados
 app.get('/api/files', (_req, res) => {
@@ -140,7 +141,98 @@ app.get('/api/files', (_req, res) => {
   }
 })
 
-// ── GET /files/* ── Serve o arquivo (suporta subpastas)
+// ── POST /api/upload ── Salva uma imagem colada (Ctrl+V) na pasta de arquivos
+// Recebe { dataUrl: "data:image/png;base64,...", suggestedName?: string }
+const EXT_BY_MIME: Record<string, string> = {
+  'image/png': '.png',
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+}
+
+app.post('/api/upload', (req, res) => {
+  try {
+    const { dataUrl } = req.body as { dataUrl?: string }
+
+    if (!dataUrl || typeof dataUrl !== 'string') {
+      return res.status(400).json({ error: 'dataUrl ausente' })
+    }
+
+    // Formato esperado: data:image/png;base64,AAAA...
+    const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/)
+    if (!match) {
+      return res.status(400).json({ error: 'Formato de dataUrl inválido' })
+    }
+
+    const mime = match[1]
+    const base64 = match[2]
+    const ext = EXT_BY_MIME[mime]
+
+    if (!ext) {
+      return res.status(415).json({ error: `Tipo não suportado: ${mime}` })
+    }
+
+    // Nome único baseado em timestamp
+    const now = new Date()
+    const stamp = now.toISOString().slice(0, 19).replace(/[T:]/g, '-')
+    const filename = `colado-${stamp}${ext}`
+    const filePath = path.join(FILES_DIR, filename)
+
+    const buffer = Buffer.from(base64, 'base64')
+    fs.writeFileSync(filePath, buffer)
+
+    console.log(`📋 Imagem colada salva: ${filename} (${buffer.length} bytes)`)
+
+    // Retorna o FileEntry para o frontend criar o card imediatamente
+    const entry = buildFileEntry(filePath)
+    res.json({ file: entry })
+  } catch (err) {
+    console.error('Erro no upload:', err)
+    res.status(500).json({ error: 'Erro ao salvar imagem' })
+  }
+})
+
+// ── Auto-save do quadro ────────────────────────────────────────
+// O estado do quadro (snapshot do tldraw) é salvo em assets/board/ultimo.json
+const BOARD_DIR = path.resolve(__dirname, '../assets/board')
+const BOARD_FILE = path.join(BOARD_DIR, 'ultimo.json')
+
+if (!fs.existsSync(BOARD_DIR)) {
+  fs.mkdirSync(BOARD_DIR, { recursive: true })
+}
+
+// POST /api/board — grava o snapshot do quadro
+app.post('/api/board', (req, res) => {
+  try {
+    const data = req.body
+    if (!data || typeof data !== 'object') {
+      return res.status(400).json({ error: 'Corpo inválido' })
+    }
+    fs.writeFileSync(BOARD_FILE, JSON.stringify(data))
+    res.json({ ok: true, savedAt: Date.now() })
+  } catch (err) {
+    console.error('Erro ao salvar quadro:', err)
+    res.status(500).json({ error: 'Erro ao salvar quadro' })
+  }
+})
+
+// GET /api/board — retorna o último quadro salvo (ou null se não existir)
+app.get('/api/board', (_req, res) => {
+  try {
+    if (!fs.existsSync(BOARD_FILE)) {
+      return res.json({ board: null })
+    }
+    const raw = fs.readFileSync(BOARD_FILE, 'utf-8')
+    const board = JSON.parse(raw)
+    res.json({ board })
+  } catch (err) {
+    console.error('Erro ao ler quadro:', err)
+    res.status(500).json({ error: 'Erro ao ler quadro' })
+  }
+})
+
+// GET /files/* ── Serve o arquivo (suporta subpastas)
 // Usa regex para capturar o caminho relativo completo, incluindo "/" e caracteres especiais.
 app.get(/^\/files\/(.+)$/, (req, res) => {
   const raw = req.params[0]
