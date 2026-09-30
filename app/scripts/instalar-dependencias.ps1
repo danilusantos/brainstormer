@@ -83,5 +83,20 @@ if (-not (Test-Path $filesDir)) {
     Write-Host "  Pasta assets\files\ criada!" -ForegroundColor Green
 }
 
+# ── Criar atalho "files" na raiz apontando para app\assets\files ──
+# A raiz e o pai de app\ (onde este projeto vive).
+$ProjectRoot = Split-Path -Parent $Root
+$linkPath = Join-Path $ProjectRoot "files"
+if (-not (Test-Path $linkPath)) {
+    # Junction nao precisa de admin (diferente de symlink no Windows)
+    cmd /c mklink /J "`"$linkPath`"" "`"$filesDir`"" | Out-Null
+    if (Test-Path $linkPath) {
+        Write-Host "  Atalho 'files' criado na raiz!" -ForegroundColor Green
+    } else {
+        Write-Host "  Aviso: nao foi possivel criar o atalho 'files'." -ForegroundColor Yellow
+        Write-Host "  Voce ainda pode usar a pasta app\assets\files diretamente." -ForegroundColor Yellow
+    }
+}
+
 Write-Host "  Tudo pronto!" -ForegroundColor Green
 exit 0
