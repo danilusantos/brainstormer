@@ -1,0 +1,35 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+server.log
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Junction/symlink na raiz (aponta para assets/files)
+/files
+
+# Arquivos dos usuarios/devs - NAO versionar dados, apenas codigo.
+# Ignora todo o conteudo de assets/files/ (imagens, PDFs, subpastas)
+# mas mantem a pasta no repositorio via .gitkeep
+assets/files/**
+!assets/files/
+!assets/files/.gitkeep
