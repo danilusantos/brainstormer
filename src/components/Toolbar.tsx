@@ -1,5 +1,7 @@
 import { useEditor, getSnapshot, loadSnapshot } from 'tldraw'
 import { useRef } from 'react'
+import { Download, Upload } from 'lucide-react'
+import { IconButton } from '../ui/IconButton'
 
 interface BrainstormSnapshot {
   version: number
@@ -49,99 +51,28 @@ export function Toolbar() {
       }
 
       loadSnapshot(editor.store, data.snapshot)
-      alert('Quadro restaurado com sucesso!')
     } catch (err) {
       console.error('Erro ao importar:', err)
       alert('Erro ao importar o arquivo. Verifique se é um JSON válido do Brainstormer.')
     } finally {
-      // Reset input para permitir importar o mesmo arquivo novamente
       if (importInputRef.current) importInputRef.current.value = ''
     }
   }
 
   return (
-    <div style={{
-      position: 'absolute',
-      top: 12,
-      left: '50%',
-      transform: 'translateX(-50%)',
-      zIndex: 500,
-      display: 'flex',
-      gap: 8,
-      pointerEvents: 'all',
-    }}>
+    <div
+      className="pointer-events-auto absolute left-1/2 top-3 z-[500] flex -translate-x-1/2 items-center gap-1 rounded-xl border border-subtle bg-surface/95 p-1 shadow-card backdrop-blur"
+    >
       <input
         ref={importInputRef}
         type="file"
         accept=".json"
-        style={{ display: 'none' }}
+        className="hidden"
         onChange={handleImportFile}
       />
 
-      <ToolbarButton
-        icon="💾"
-        label="Exportar"
-        title="Exportar quadro como JSON"
-        onClick={handleExport}
-        color="#4caf50"
-      />
-
-      <ToolbarButton
-        icon="📂"
-        label="Importar"
-        title="Importar quadro de um arquivo JSON"
-        onClick={handleImportClick}
-        color="#2196f3"
-      />
+      <IconButton icon={Download} label="Exportar quadro" onClick={handleExport} />
+      <IconButton icon={Upload} label="Importar quadro" onClick={handleImportClick} />
     </div>
-  )
-}
-
-interface ToolbarButtonProps {
-  icon: string
-  label: string
-  title: string
-  onClick: () => void
-  color: string
-}
-
-function ToolbarButton({ icon, label, title, onClick, color }: ToolbarButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      title={title}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '6px 14px',
-        background: 'rgba(22, 33, 62, 0.92)',
-        backdropFilter: 'blur(8px)',
-        border: `1px solid ${color}44`,
-        borderRadius: 20,
-        color: '#eaeaea',
-        fontSize: 12,
-        fontWeight: 600,
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-        letterSpacing: 0.3,
-      }}
-      onMouseEnter={e => {
-        const btn = e.currentTarget as HTMLButtonElement
-        btn.style.background = color + '22'
-        btn.style.borderColor = color
-        btn.style.transform = 'translateY(-1px)'
-      }}
-      onMouseLeave={e => {
-        const btn = e.currentTarget as HTMLButtonElement
-        btn.style.background = 'rgba(22, 33, 62, 0.92)'
-        btn.style.borderColor = color + '44'
-        btn.style.transform = 'translateY(0)'
-      }}
-    >
-      <span>{icon}</span>
-      <span>{label}</span>
-    </button>
   )
 }

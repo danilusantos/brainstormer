@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react'
+import { Brain, FolderOpen, MousePointerClick, Move, Pencil, Save } from 'lucide-react'
+import type { LucideProps } from 'lucide-react'
+import type { ComponentType } from 'react'
 
 const STORAGE_KEY = 'brainstormer-welcome-seen'
 
@@ -18,81 +21,42 @@ export function WelcomeModal() {
   if (!visible) return null
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(0,0,0,0.7)',
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backdropFilter: 'blur(4px)',
-    }}>
-      <div style={{
-        background: '#16213e',
-        border: '1px solid rgba(233,69,96,0.3)',
-        borderRadius: 16,
-        padding: '36px 40px',
-        maxWidth: 480,
-        width: '90%',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-        animation: 'fadeIn 0.3s ease',
-      }}>
-        <style>{`@keyframes fadeIn { from { opacity:0; transform:scale(0.95) } to { opacity:1; transform:scale(1) } }`}</style>
-
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🧠</div>
-          <h2 style={{
-            color: '#eaeaea',
-            fontSize: 22,
-            fontWeight: 700,
-            marginBottom: 6,
-          }}>
-            Bem-vindo ao Brainstormer!
-          </h2>
-          <p style={{ color: '#8892a4', fontSize: 13 }}>
-            Seu quadro visual de ideias
-          </p>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="w-[90%] max-w-md rounded-2xl border border-subtle bg-surface p-8 shadow-float">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft">
+            <Brain size={24} className="text-brand" strokeWidth={2.2} />
+          </div>
+          <h2 className="text-lg font-semibold tracking-tight text-ink">Bem-vindo ao Brainstormer</h2>
+          <p className="mt-1 text-sm text-ink-muted">Seu quadro visual de ideias</p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 28 }}>
-          <Step icon="📁" text={<>Coloque seus arquivos (imagens e PDFs) na pasta <strong style={{ color: '#eaeaea' }}>files/</strong> na raiz do projeto</>} />
-          <Step icon="🖱️" text="Clique num arquivo na barra lateral para adicioná-lo ao quadro" />
-          <Step icon="↔️" text="Arraste e redimensione os cards livremente pelo quadro" />
-          <Step icon="✏️" text="Use as ferramentas do tldraw para desenhar, escrever e conectar ideias" />
-          <Step icon="💾" text="Salve seu quadro com o botão Exportar e restaure depois com Importar" />
+        <div className="mb-7 flex flex-col gap-3.5">
+          <Step icon={FolderOpen} text={<>Coloque imagens e PDFs na pasta <strong className="text-ink">files/</strong></>} />
+          <Step icon={MousePointerClick} text="Clique ou arraste um arquivo da lateral para o quadro" />
+          <Step icon={Move} text="Mova e redimensione os cards livremente" />
+          <Step icon={Pencil} text="Use as ferramentas para desenhar e escrever" />
+          <Step icon={Save} text="Tudo é salvo automaticamente e restaurado ao reabrir" />
         </div>
 
         <button
           onClick={handleClose}
-          style={{
-            width: '100%',
-            padding: '12px',
-            background: '#e94560',
-            border: 'none',
-            borderRadius: 10,
-            color: '#fff',
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: 'pointer',
-            letterSpacing: 0.5,
-            transition: 'background 0.2s',
-          }}
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = '#c73652' }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = '#e94560' }}
+          className="w-full rounded-lg bg-brand py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
         >
-          Entendido, vamos lá! 🚀
+          Começar
         </button>
       </div>
     </div>
   )
 }
 
-function Step({ icon, text }: { icon: string; text: React.ReactNode }) {
+function Step({ icon: Icon, text }: { icon: ComponentType<LucideProps>; text: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-      <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{icon}</span>
-      <p style={{ color: '#8892a4', fontSize: 13, lineHeight: 1.5, margin: 0 }}>{text}</p>
+    <div className="flex items-start gap-3">
+      <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-surface-hover">
+        <Icon size={14} className="text-ink-secondary" />
+      </div>
+      <p className="text-sm leading-relaxed text-ink-secondary">{text}</p>
     </div>
   )
 }
