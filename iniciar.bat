@@ -13,7 +13,8 @@ powershell.exe -ExecutionPolicy Bypass -File "%~dp0scripts\verificar-node.ps1"
 if errorlevel 1 (
     echo.
     echo  ERRO: Node.js nao foi instalado corretamente.
-    echo  Execute instalar-node.bat como administrador e tente novamente.
+    echo  Verifique sua conexao com a internet e execute este arquivo novamente.
+    echo  Se o problema persistir, instale o Node.js manualmente em https://nodejs.org
     echo.
     pause
     exit /b 1

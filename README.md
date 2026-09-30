@@ -4,19 +4,18 @@ Quadro visual interativo para organizar ideias com imagens e PDFs.
 
 ## Como usar
 
-### 1. Primeira vez (instalar o Node.js)
-Se a sua máquina ainda não tem Node.js, dê duplo clique em **`instalar-node.bat`**.
-(O `iniciar.bat` também tenta instalar automaticamente se não encontrar.)
-
-### 2. Iniciar o app
+### Iniciar o app
 Dê duplo clique em **`iniciar.bat`**.
 
 Ele faz tudo sozinho:
-- Verifica o Node.js (instala se necessário)
+- Verifica o Node.js e **instala automaticamente** se não encontrar
 - Instala as dependências na primeira vez
 - Sobe o servidor e abre o navegador em `http://localhost:3001`
 
 Não precisa clicar em mais nada. Para encerrar, feche a janela do `iniciar.bat`.
+
+> A instalação do Node.js pede permissão de administrador (janela do Windows).
+> É só confirmar.
 
 ### 3. Adicionar arquivos ao quadro
 Três formas, todas salvam o arquivo na pasta **`files/`** automaticamente:
@@ -72,7 +71,10 @@ brainstormer/
 ├── src/                ← Código-fonte do front (React + TypeScript)
 ├── server/             ← Servidor Node.js (Express)
 ├── scripts/            ← Scripts .ps1 usados pelo iniciar.bat
-├── instalar-node.bat   ← Instala o Node.js
+│   ├── verificar-node.ps1
+│   ├── instalar-node.ps1
+│   ├── instalar-dependencias.ps1
+│   └── iniciar-servidor.ps1
 ├── iniciar.bat         ← Inicia o app (1 clique)
 └── README.md
 ```

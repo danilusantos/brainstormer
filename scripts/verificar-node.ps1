@@ -44,10 +44,10 @@ if ($nodeExe) {
 Write-Host "  Node.js nao encontrado. Iniciando instalacao..." -ForegroundColor Yellow
 Write-Host ""
 
-$installerScript = Join-Path $Root "instalar-node.ps1"
+$installerScript = Join-Path $PSScriptRoot "instalar-node.ps1"
 
 if (-not (Test-Path $installerScript)) {
-    Write-Host "  ERRO: instalar-node.ps1 nao encontrado em $Root" -ForegroundColor Red
+    Write-Host "  ERRO: instalar-node.ps1 nao encontrado em $PSScriptRoot" -ForegroundColor Red
     exit 1
 }
 
