@@ -1,0 +1,50 @@
+name: Release
+
+# Dispara quando uma tag de versão é enviada (ex: 1.0.1v, 1.2.0v)
+on:
+  push:
+    tags:
+      - "*v"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v6
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Instalar dependências
+        working-directory: app
+        run: npm install
+
+      - name: Gerar o build de produção
+        working-directory: app
+        run: npm run build
+
+      - name: Empacotar o projeto para o cliente
+        run: |
+          # Monta um zip só com o que o cliente precisa para rodar.
+          mkdir -p release/brainstormer/app
+          cp README.md iniciar.bat release/brainstormer/
+          # Copia o app sem node_modules (o cliente instala no primeiro uso)
+          rsync -a --exclude 'node_modules' app/ release/brainstormer/app/
+          cd release
+          zip -r "../brainstormer-${GITHUB_REF_NAME}.zip" brainstormer
+          cd ..
+          echo "Pacote gerado: brainstormer-${GITHUB_REF_NAME}.zip"
+
+      - name: Criar a release no GitHub
+        uses: softprops/action-gh-release@v3
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: brainstormer-${{ github.ref_name }}.zip
