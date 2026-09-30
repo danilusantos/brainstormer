@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { getDocument } from 'pdfjs-dist'
-import type { PDFDocumentProxy } from 'pdfjs-dist'
+import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist'
+import { ChevronLeft, ChevronRight, Loader2, FileWarning } from 'lucide-react'
 
 interface PdfViewerProps {
   url: string
   width: number
   height: number
 }
+
+const CONTROLS_HEIGHT = 34
 
 export function PdfViewer({ url, width, height }: PdfViewerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -15,18 +18,26 @@ export function PdfViewer({ url, width, height }: PdfViewerProps) {
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const renderTaskRef = useRef<{ cancel: () => void } | null>(null)
+  const renderTaskRef = useRef<RenderTask | null>(null)
 
-  // Carregar o PDF
+  // ── Carregar o PDF ────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false
+    let loadedDoc: PDFDocumentProxy | null = null
+
     setLoading(true)
     setError(null)
+    setPdf(null)
 
     const loadingTask = getDocument(url)
     loadingTask.promise
       .then(doc => {
-        if (cancelled) return
+        if (cancelled) {
+          // Componente já desmontou: destrói o doc que acabou de carregar
+          doc.destroy()
+          return
+        }
+        loadedDoc = doc
         setPdf(doc)
         setTotalPages(doc.numPages)
         setCurrentPage(1)
@@ -35,21 +46,29 @@ export function PdfViewer({ url, width, height }: PdfViewerProps) {
       .catch(err => {
         if (cancelled) return
         console.error('Erro ao carregar PDF:', err)
-        setError('Falha ao carregar PDF')
+        setError('Não foi possível abrir o PDF')
         setLoading(false)
       })
 
     return () => {
       cancelled = true
-      loadingTask.destroy()
+      // Cancela renderização em andamento
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel()
+        renderTaskRef.current = null
+      }
+      // Destrói o doc já carregado (se houver). Não chamamos destroy no
+      // loadingTask enquanto ele ainda resolve — isso causava erros.
+      if (loadedDoc) {
+        loadedDoc.destroy()
+      }
     }
   }, [url])
 
-  // Renderizar página
+  // ── Renderizar página ─────────────────────────────────────────
   const renderPage = useCallback(async (pageNum: number) => {
     if (!pdf || !canvasRef.current) return
 
-    // Cancelar renderização anterior
     if (renderTaskRef.current) {
       renderTaskRef.current.cancel()
       renderTaskRef.current = null
@@ -60,29 +79,28 @@ export function PdfViewer({ url, width, height }: PdfViewerProps) {
       const canvas = canvasRef.current
       if (!canvas) return
 
-      // Calcular escala para caber no card
-      const containerWidth = width - 2 // margem
-      const containerHeight = height - 44 // espaço para controles
+      const availW = Math.max(width - 4, 1)
+      const availH = Math.max(height - CONTROLS_HEIGHT - 4, 1)
 
-      const viewport0 = page.getViewport({ scale: 1 })
-      const scaleX = containerWidth / viewport0.width
-      const scaleY = containerHeight / viewport0.height
-      const scale = Math.min(scaleX, scaleY, 2)
-
+      const base = page.getViewport({ scale: 1 })
+      const scale = Math.min(availW / base.width, availH / base.height, 3)
       const viewport = page.getViewport({ scale })
-      const ctx = canvas.getContext('2d')!
+
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
 
       canvas.width = viewport.width
       canvas.height = viewport.height
 
-      const renderTask = page.render({ canvasContext: ctx, viewport })
-      renderTaskRef.current = renderTask
-
-      await renderTask.promise
-      page.cleanup()
+      const task = page.render({ canvasContext: ctx, viewport })
+      renderTaskRef.current = task
+      await task.promise
+      renderTaskRef.current = null
     } catch (err: unknown) {
-      // Ignorar erros de cancelamento
-      if (err instanceof Error && err.message?.includes('cancelled')) return
+      // RenderingCancelledException é esperado ao trocar de página rápido
+      const name = (err as { name?: string })?.name
+      if (name === 'RenderingCancelledException') return
+      if (err instanceof Error && err.message?.toLowerCase().includes('cancel')) return
       console.error('Erro ao renderizar página:', err)
     }
   }, [pdf, width, height])
@@ -91,101 +109,75 @@ export function PdfViewer({ url, width, height }: PdfViewerProps) {
     if (pdf) renderPage(currentPage)
   }, [pdf, currentPage, renderPage])
 
-  const goToPrev = (e: React.MouseEvent) => {
+  const goToPrev = (e: React.PointerEvent) => {
     e.stopPropagation()
     setCurrentPage(p => Math.max(1, p - 1))
   }
 
-  const goToNext = (e: React.MouseEvent) => {
+  const goToNext = (e: React.PointerEvent) => {
     e.stopPropagation()
     setCurrentPage(p => Math.min(totalPages, p + 1))
   }
 
+  // ── Estados de loading / erro ─────────────────────────────────
   if (loading) {
     return (
-      <div style={{
-        width, height,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#1a1a2e', color: '#8892a4', fontSize: 13, borderRadius: 8,
-      }}>
-        <span>Carregando PDF...</span>
+      <div
+        className="flex items-center justify-center gap-2 bg-surface text-ink-muted"
+        style={{ width, height }}
+      >
+        <Loader2 size={16} className="animate-spin" />
+        <span className="text-xs">Carregando PDF</span>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div style={{
-        width, height,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#1a1a2e', color: '#e94560', fontSize: 13, borderRadius: 8,
-        padding: 16, textAlign: 'center',
-      }}>
-        <span>⚠️ {error}</span>
+      <div
+        className="flex flex-col items-center justify-center gap-2 bg-surface p-4 text-center text-danger"
+        style={{ width, height }}
+      >
+        <FileWarning size={22} />
+        <span className="text-xs">{error}</span>
       </div>
     )
   }
 
   return (
-    <div style={{
-      width, height,
-      display: 'flex', flexDirection: 'column',
-      background: '#1a1a2e', borderRadius: 8, overflow: 'hidden',
-    }}>
+    <div className="flex flex-col bg-surface" style={{ width, height }}>
       {/* Canvas da página */}
-      <div style={{
-        flex: 1, overflow: 'hidden',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#0d0d1a',
-      }}>
-        <canvas
-          ref={canvasRef}
-          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-        />
+      <div className="flex flex-1 items-center justify-center overflow-hidden bg-[#f4f4f5]">
+        <canvas ref={canvasRef} className="max-h-full max-w-full object-contain" />
       </div>
 
       {/* Controles de navegação */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '4px 10px',
-        background: 'rgba(0,0,0,0.6)',
-        flexShrink: 0,
-        height: 36,
-      }}>
+      <div
+        className="flex flex-shrink-0 items-center justify-between border-t border-subtle bg-surface px-2"
+        style={{ height: CONTROLS_HEIGHT }}
+      >
         <button
           onPointerDown={goToPrev}
           disabled={currentPage <= 1}
-          style={navButtonStyle(currentPage <= 1)}
+          className="flex h-6 w-6 items-center justify-center rounded text-ink-secondary transition-colors hover:bg-surface-hover disabled:pointer-events-none disabled:opacity-30"
+          aria-label="Página anterior"
         >
-          ◀
+          <ChevronLeft size={16} />
         </button>
 
-        <span style={{ color: '#eaeaea', fontSize: 11 }}>
+        <span className="text-[11px] font-medium text-ink-secondary">
           {currentPage} / {totalPages}
         </span>
 
         <button
           onPointerDown={goToNext}
           disabled={currentPage >= totalPages}
-          style={navButtonStyle(currentPage >= totalPages)}
+          className="flex h-6 w-6 items-center justify-center rounded text-ink-secondary transition-colors hover:bg-surface-hover disabled:pointer-events-none disabled:opacity-30"
+          aria-label="Próxima página"
         >
-          ▶
+          <ChevronRight size={16} />
         </button>
       </div>
     </div>
   )
-}
-
-function navButtonStyle(disabled: boolean): React.CSSProperties {
-  return {
-    background: disabled ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.15)',
-    border: 'none',
-    color: disabled ? '#444' : '#eaeaea',
-    cursor: disabled ? 'default' : 'pointer',
-    borderRadius: 4,
-    padding: '2px 10px',
-    fontSize: 12,
-    transition: 'background 0.15s',
-    pointerEvents: disabled ? 'none' : 'all',
-  }
 }
