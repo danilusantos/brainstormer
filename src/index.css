@@ -1,30 +1,76 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@import "tailwindcss";
+
+/* ── Design System — tokens do Brainstormer ──────────────────────
+   Definidos com @theme para virarem utilitários do Tailwind v4
+   (ex: bg-surface, text-muted, border-subtle, etc.)
+*/
+@theme {
+  --color-bg: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f4f4f5;
+  --color-surface-active: #ececee;
+  --color-subtle: #e7e7e9;
+  --color-strong: #d4d4d8;
+
+  --color-ink: #1a1a1a;
+  --color-ink-secondary: #52525b;
+  --color-ink-muted: #a1a1aa;
+
+  --color-brand: #2563eb;
+  --color-brand-soft: #eff4ff;
+
+  --color-ok: #16a34a;
+  --color-warn: #d97706;
+  --color-danger: #dc2626;
+
+  --radius-card: 10px;
+
+  --shadow-soft: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-float: 0 8px 30px rgba(0,0,0,0.12);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
+/* Reset mínimo (o Preflight do Tailwind cobre a maior parte) */
 html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
+/* Sidebar com largura fixa via variável */
 :root {
-  --sidebar-width: 280px;
-  --toolbar-height: 52px;
-  --color-bg: #1a1a2e;
-  --color-sidebar: #16213e;
-  --color-sidebar-hover: #0f3460;
-  --color-accent: #e94560;
-  --color-text: #eaeaea;
-  --color-text-muted: #8892a4;
-  --color-border: #2a2a4a;
-  --color-card-bg: #ffffff;
-  --color-success: #4caf50;
-  --color-error: #f44336;
-  --color-warning: #ff9800;
-  --shadow-card: 0 4px 20px rgba(0,0,0,0.3);
-  --radius: 8px;
+  --sidebar-width: 268px;
+}
+
+/* Scrollbar minimalista */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-strong); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-muted); }
+
+/* ── Ajustes de layout do tldraw ──────────────────────────────── */
+
+/* Minimap / navegação: move do canto inferior esquerdo para o direito */
+.tlui-navigation-panel {
+  left: auto !important;
+  right: 0 !important;
+}
+.tlui-navigation-panel::before {
+  inset: -2px 0px 0px -2px !important;
+  border-right: none !important;
+  border-left: 2px solid var(--color-background) !important;
+  border-top-right-radius: 0 !important;
+  border-top-left-radius: var(--radius-4) !important;
+}
+
+/* Menu superior esquerdo do tldraw: empurra para não ficar sob a sidebar.
+   A variável --brainstormer-left-inset é controlada pelo App conforme a
+   sidebar está aberta (268px) ou recolhida (0). */
+.tlui-layout__top__left {
+  padding-left: var(--brainstormer-left-inset, 0px);
+  transition: padding-left 0.2s ease;
 }
